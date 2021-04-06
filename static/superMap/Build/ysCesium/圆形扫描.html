@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>圆形区域扫描</title>
+    <link rel="stylesheet" href="../scripts/Cesium/Widgets/widgets.css">
+    <script src="../scripts/Cesium/Cesium.js"></script>
+</head>
+<body>
+<div  id="map"></div>
+</body>
+<script>
+    
+        function YsCesium(container,options) {
+                if(!options) options = {}
+                //cesium资源ion
+                options.defaultAccessToken =  options.defaultAccessToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDhhYmQxOC1mYzMwLTRhYmEtOTI5Ny1iNGExNTQ3ZTZhODkiLCJpZCI6NTQ1NCwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU0MzM3Mzc0NH0.RU6ynAZcwQvdfygt_N_j2rb2lpsuyyROzdaLQg0emAg'
+                Cesium.Ion.defaultAccessToken = options.defaultAccessToken
+                // const args=["geocoder","homeButton","sceneModePicker","baseLayerPicker","navigationHelpButton","animation","timeLine","fullscreenButton","vrButton","infoBox","selectionIndicator"];
+                // for(let i=0; i < args.length; i++) {
+                //     if(!options[args[i]]) {
+                //         options[args[i]] = false
+                //     }
+                // }
+                this.viewer = new Cesium.Viewer(container,options)
+
+                //取消双击选中事件。(这个作用不大)
+                // this.viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
+                //全球光照
+                // this.viewer.scene.globe.enableLighting = options.globeLight
+                //大气层
+                // this.viewer.scene.globe.showGroundAtmosphere = options.showGroundAtmosphere
+        }
+
+    // console.log(YsCesium)
+YsCesium.prototype.addCircleScan = function(data) {
+        this.viewer.scene.globe.depthTestAgainstTerrain = true; //防止移动、放大缩小会视觉偏移depthTestAgainstTerrain // 设置该属性为true之后，标绘将位于地形的顶部；如果设为false（默认值），那么标绘将位于平面上。缺陷：开启该属性有可能在切换图层时会引发标绘消失的bug。
+        const CartographicCenter = new Cesium.Cartographic(Cesium.Math.toRadians(data.lon), Cesium.Math.toRadians(data.lat), 0); //中心位子
+        return  addCircleScanPostStage(this.viewer, CartographicCenter,data.r,data.scanColor,data.interval);
+}
+function addCircleScanPostStage(viewer, cartographicCenter, maxRadius, scanColor, duration) {
+        const ScanSegmentShader =
+            "uniform sampler2D colorTexture;" +
+            "uniform sampler2D depthTexture;" +
+            "varying vec2 v_textureCoordinates;" +
+            "uniform vec4 u_scanCenterEC;" +
+            "uniform vec3 u_scanPlaneNormalEC;" +
+            "uniform float u_radius;" +
+            "uniform vec4 u_scanColor;" +
+            "vec4 toEye(in vec2 uv, in float depth)" +
+            " {" +
+            " vec2 xy = vec2((uv.x * 2.0 - 1.0),(uv.y * 2.0 - 1.0));" +
+            " vec4 posInCamera =czm_inverseProjection * vec4(xy, depth, 1.0);" +
+            " posInCamera =posInCamera / posInCamera.w;" +
+            " return posInCamera;" +
+            " }" +
+            "vec3 pointProjectOnPlane(in vec3 planeNormal, in vec3 planeOrigin, in vec3 point)" +
+            "{" +
+            "vec3 v01 = point -planeOrigin;" +
+            "float d = dot(planeNormal, v01) ;" +
+            "return (point - planeNormal * d);" +
+            "}" +
+            "float getDepth(in vec4 depth)" +
+            "{" +
+            "float z_window = czm_unpackDepth(depth);" +
+            "z_window = czm_reverseLogDepth(z_window);" +
+            "float n_range = czm_depthRange.near;" +
+            "float f_range = czm_depthRange.far;" +
+            "return (2.0 * z_window - n_range - f_range) / (f_range - n_range);" +
+            "}" +
+            "void main()" +
+            "{" +
+            "gl_FragColor = texture2D(colorTexture, v_textureCoordinates);" +
+            "float depth = getDepth( texture2D(depthTexture, v_textureCoordinates));" +
+            "vec4 viewPos = toEye(v_textureCoordinates, depth);" +
+            "vec3 prjOnPlane = pointProjectOnPlane(u_scanPlaneNormalEC.xyz, u_scanCenterEC.xyz, viewPos.xyz);" +
+            "float dis = length(prjOnPlane.xyz - u_scanCenterEC.xyz);" +
+            "if(dis < u_radius)" +
+            "{" +
+            "float f = 1.0 -abs(u_radius - dis) / u_radius;" +
+            "f = pow(f, 4.0);" +
+            "gl_FragColor = mix(gl_FragColor, u_scanColor, f);" +
+            "}" +
+            "}";
+
+        const _Cartesian3Center = Cesium.Cartographic.toCartesian(cartographicCenter);
+        const _Cartesian4Center = new Cesium.Cartesian4(_Cartesian3Center.x, _Cartesian3Center.y, _Cartesian3Center.z, 1);
+        const _CartographicCenter1 = new Cesium.Cartographic(cartographicCenter.longitude, cartographicCenter.latitude, cartographicCenter.height + 500);
+        const _Cartesian3Center1 = Cesium.Cartographic.toCartesian(_CartographicCenter1);
+        const _Cartesian4Center1 = new Cesium.Cartesian4(_Cartesian3Center1.x, _Cartesian3Center1.y, _Cartesian3Center1.z, 1);
+        const _time = (new Date()).getTime();
+        const _scratchCartesian4Center = new Cesium.Cartesian4();
+        const _scratchCartesian4Center1 = new Cesium.Cartesian4();
+        const _scratchCartesian3Normal = new Cesium.Cartesian3();
+        const ScanPostStage = new Cesium.PostProcessStage({
+            fragmentShader: ScanSegmentShader,
+            uniforms: {
+                u_scanCenterEC: function () {
+                    return Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center, _scratchCartesian4Center);
+                },
+                u_scanPlaneNormalEC: function () {
+                    const temp = Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center, _scratchCartesian4Center);
+                    const temp1 = Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center1, _scratchCartesian4Center1);
+                    _scratchCartesian3Normal.x = temp1.x - temp.x;
+                    _scratchCartesian3Normal.y = temp1.y - temp.y;
+                    _scratchCartesian3Normal.z = temp1.z - temp.z;
+                    Cesium.Cartesian3.normalize(_scratchCartesian3Normal, _scratchCartesian3Normal);
+                    return _scratchCartesian3Normal;
+
+                },
+                u_radius: function () {
+                    return maxRadius * (((new Date()).getTime() - _time) % duration) / duration;
+                },
+                u_scanColor: scanColor
+            }
+        });
+        viewer.scene.postProcessStages.add(ScanPostStage)
+        return ScanPostStage
+}
+
+
+
+
+const app = new YsCesium("map")
+// console.log(app)
+    const viewer = app.viewer
+
+    let lon = 116;
+    let lat = 39;
+
+    a(lon,lat)
+    function a(lon,lat){
+        app.addCircleScan({
+                lon:lon,//经度
+                lat:lat, //纬度
+                scanColor:new Cesium.Color(0,1.0,0,1),
+                r:1500000,//扫描半径
+                interval:8000//时间间隔
+         });
+         
+    }
+    viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(116.46, 39.92, 10000000.0),
+    });
+
+    //飞行到这个位子
+    // viewer.camera.flyTo({
+    //     destination : Cesium.Cartesian3.fromDegrees(117.217124,31.809777, 1500.0),
+    //     orientation: {
+    //         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north) //东西南北朝向
+    //         pitch : Cesium.Math.toRadians(-90),    // default value (looking down)  //俯视仰视视觉
+    //         roll : 0.0                             // default value
+    //     },
+    //     duration:3//3秒到达战场
+    // });
+</script>
+</html>

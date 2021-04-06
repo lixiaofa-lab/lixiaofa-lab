@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <title>绘制</title>
+  <link href="../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <link href="./css/bootstrap.min.css" rel="stylesheet">
+  <link href="./css/pretty.css" rel="stylesheet">
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/bootstrap-select.min.js"></script>
+  <script src="./js/tooltip.js"></script>
+  <script src="./js/config.js"></script>
+  <script type="text/javascript" src="../Build/Cesium/Cesium.js"></script>
+<!--  <script src="../Build/ysCesium/ysCesium.js"></script>-->
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<script type="text/javascript">
+  window.EarthIsLoaded = false
+  let viewer = null
+  let scene = null
+
+  function onload (Cesium) {
+    // 初始化viewer部件
+    viewer = new Cesium.Viewer('cesiumContainer', {
+      infoBox: false,
+      selectionIndicator: false,
+      // })
+      // viewer = new Cesium.Viewer('cesiumContainer', {
+      //   // imageryProvider: new Cesium.Viewer('cesiumContainer', {
+      //   //   shouldAnimate: true,
+
+          // imageryProvider: new Cesium.UrlTemplateImageryProvider({
+          //   url: '/download/{z}/{x}/{y}.jpg',
+          //   tilingScheme: new Cesium.GeographicTilingScheme(),
+          //   minimumLevel: 0,
+          //   maximumLevel: 18
+          // }),
+
+      //   //   // terrainProvider : new Cesium.CesiumTerrainProvider({
+      //   //   //   url : '/terrain8089/smartgis.service/terrain',
+      //   //   //   requestVertexNormals : true
+      //   //   // }),
+      //     animation: false,//是否显示动画控件 左下方那个
+      //     baseLayerPicker: false,//是否显示图层选择控件
+      //     geocoder: false,//是否显示地名查找控件
+      //     timeline: false,//是否显示时间线控件
+      //     sceneModePicker: false,//是否显示投影方式控件
+      //     navigationHelpButton: false,//是否显示帮助信息控件
+      //     infoBox: false,//是否显示点击要素之后显示的信息
+      //     homeButton: true,
+      //     fullscreenButton: false
+    }),
+      console.log(viewer)
+
+      //   animation: false,//�Ƿ���ʾ�����ؼ� ���·��Ǹ�
+      //   baseLayerPicker: false,//�Ƿ���ʾͼ��ѡ��ؼ�
+      //   geocoder: false,//�Ƿ���ʾ�������ҿؼ�
+      //   timeline: false,//�Ƿ���ʾʱ���߿ؼ�
+      //   sceneModePicker: false,//�Ƿ���ʾͶӰ��ʽ�ؼ�
+      //   navigationHelpButton: false,//�Ƿ���ʾ������Ϣ�ؼ�
+      //   infoBox: false,//�Ƿ���ʾ���Ҫ��֮����ʾ����Ϣ
+      //   homeButton: false,
+      //   fullscreenButton: false
+      // });
+      window.viewer = viewer
+    scene = viewer.scene
+    scene.shadowMap.darkness = 1.275 //设置第二重烘焙纹理的效果（明暗程度）
+    scene.skyAtmosphere.brightnessShift = 0  //修改大气的亮度
+    scene.debugShowFramesPerSecond = true
+    scene.hdrEnabled = false
+    scene.sun.show = false
+    // 01设置环境光的强度-新处理CBD场景
+    scene.lightSource.ambientLightColor = new Cesium.Color(0.65, 0.65, 0.65, 1)
+    // 添加光源
+    var position1 = new Cesium.Cartesian3.fromDegrees(116.261209157595, 39.3042238956531, 480)
+
+    //光源方向点
+    var targetPosition1 = new Cesium.Cartesian3.fromDegrees(116.261209157595, 39.3042238956531, 430)
+    var dirLightOptions = {
+      targetPosition: targetPosition1,
+      color: new Cesium.Color(1.0, 1.0, 1.0, 1),
+      intensity: 0.55
+    }
+    directionalLight_1 = new Cesium.DirectionalLight(position1, dirLightOptions)
+    scene.addLightSource(directionalLight_1)
+
+    window.EarthIsLoaded = true
+
+    //点击事件
+    let canvas = viewer.scene.canvas
+    let ellipsoid = viewer.scene.globe.ellipsoid
+    let handler = new Cesium.ScreenSpaceEventHandler(canvas)
+    handler.setInputAction((movement) => {
+      let pick = viewer.scene.pick(movement.position)
+      if (Cesium.defined(pick)) {
+        onCesiumLeftClick(pick.id._name)
+        // console.log(pick.id._name)
+
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
+
+    let points = [
+      [120.00, 23.00, 5000],
+      [123.00, 23.00, 5000],
+      [123.00, 28.00, 5000],
+      [120.00, 28.00, 5000],
+    ]
+    /**画点*/
+    // pointPoint(points[0])
+    // pointPoint(points[1])
+    // pointPoint(points[2])
+    // pointPoint(points[3])
+    /**画线*/
+    // lineLine(points[0], points[1])
+    // lineLine(points[1], points[2])
+    // lineLine(points[2], points[3])
+    // lineLine(points[3], points[0])
+    /**画面*/
+    // panelPanel(points)
+
+    // 让实体上的图片不被覆盖
+    viewer.scene.globe.depthTestAgainstTerrain = false  //开启后可能会引发标绘消失的BUG
+
+
+
+    // 获取设施信息
+    // 创建第一个点
+    viewer.entities.add(new Cesium.Entity({
+      id:'point1',
+      name:"point1",
+      show:true,
+      label:{
+        text:"百色机场",
+        font:"10px sans-serif",
+        pixelOffset : new Cesium.Cartesian2(0.0, -20)
+      },
+      position:Cesium.Cartesian3.fromDegrees(107.18,24.03),
+      point: new Cesium.PointGraphics({
+        show:true,
+        pixelSize:10,
+        heightReference:Cesium.HeightReference.NONE,
+        color:new Cesium.Color(0,0,1,1),
+        outlineColor:new Cesium.Color(0,0,0,0),
+        outlineWidth:0,
+        scaleByDistance:new Cesium.NearFarScalar(0,1,5e10,1),
+        translucencyByDistance:new Cesium.NearFarScalar(0,1,5e10,1),
+        distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,4.8e10),
+      })
+    }));
+
+
+    aaa()
+  }
+
+  //点击事件执行函数
+  function onCesiumLeftClick (id) {
+    top.VUE_ENTITY.$store.commit('SET_THECESIUMCLICKENTITYID', id)
+  }
+
+  // 画点
+  function addPoints (item) {
+    // console.log(item)
+    console.log(888)
+    let {lon, lat, id, name} = item
+    viewer.entities.add(new Cesium.Entity({
+      id: id,
+      name: 'point1',
+      show: true,
+      label: {
+        text: name,
+        font: '10px sans-serif',
+        pixelOffset: new Cesium.Cartesian2(0, 13),
+        // fillColor: Cesium.Color.YELLOW,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style:Cesium.LabelStyle.TYPE_FILL_AND_OUTLINE,
+      },
+      position: Cesium.Cartesian3.fromDegrees(lat, lon, 500),
+      point: new Cesium.PointGraphics({
+        show: true,
+        pixelSize: 10,
+        heightReference: Cesium.HeightReference.NONE,
+        color: Cesium.Color.BLUE,
+        outlineColor: new Cesium.Color(0, 0, 0, 0),
+        outlineWidth: 0,
+        scaleByDistance: new Cesium.NearFarScalar(0, 1, 5e10, 1),
+        translucencyByDistance: new Cesium.NearFarScalar(0, 1, 5e10, 1),
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 4.8e10),
+      })
+    }))
+  }
+
+  //画圆
+  function addCircle (item) {
+    let {lon, lat, id, name} = item
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lat, lon),
+      name: 'circle',
+      ellipse: {
+        semiMinorAxis: 1000.0,
+        semiMajorAxis: 1000.0,
+        // height: 200000.0,
+        material: Cesium.Color.RED.withAlpha(0.5),
+      },
+    })
+  }
+
+
+
+
+
+
+
+
+
+
+  // 标记重要性等级
+  function addImportantRank(item,lat,lon){
+    let {level} = item
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lat,lon),
+      name: 'Green circle at height with outline',
+      label: {
+        text:'重要性等级:'+level,
+        font: '10px sans-serif',
+        pixelOffset: new Cesium.Cartesian2(0, -25),
+        fillColor: Cesium.Color.YELLOW,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style:Cesium.LabelStyle.TYPE_FILL_AND_OUTLINE,
+      },
+    })
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(lat,lon,1000000),
+    })
+  }
+  // 标记脆弱性等级
+  function addFragileRank(item,lat,lon){
+    let {level} = item
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lat,lon),
+      name: 'Green circle at height with outline',
+      label: {
+        text:'脆弱性等级:'+level,
+        font: '10px sans-serif',
+        pixelOffset: new Cesium.Cartesian2(0, -35),
+        fillColor: Cesium.Color.YELLOW,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style:Cesium.LabelStyle.TYPE_FILL_AND_OUTLINE,
+      },
+    })
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(lat,lon,1000000),
+    })
+  }
+
+  // 标记灾害异常
+  function (item,lat,lon){
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lat,lon),
+      name: 'Green circle at height with outline',
+      label: {
+        // text:'脆:'+level,
+        text:'异常警报',
+        font: '10px sans-serif',
+        pixelOffset: new Cesium.Cartesian2(0, -25),
+        fillColor: Cesium.Color.YELLOW,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style:Cesium.LabelStyle.TYPE_FILL_AND_OUTLINE,
+      },
+    })
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(lat,lon,1000000),
+    })
+  }
+
+
+
+// 抛物线
+function aaa () {
+  // viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+  viewer.scene.globe.depthTestAgainstTerrain = true; //开启深度检测
+      function addCircleScanPostStage(viewer, cartographicCenter, maxRadius, scanColor, duration) {
+        var _Cartesian3Center = Cesium.Cartographic.toCartesian(cartographicCenter);
+        var _Cartesian4Center = new Cesium.Cartesian4(_Cartesian3Center.x, _Cartesian3Center.y, _Cartesian3Center.z, 1);
+
+        var _CartograhpicCenter1 = new Cesium.Cartographic(cartographicCenter.longitude, cartographicCenter.latitude, cartographicCenter.height + 500);
+        var _Cartesian3Center1 = Cesium.Cartographic.toCartesian(_CartograhpicCenter1);
+        var _Cartesian4Center1 = new Cesium.Cartesian4(_Cartesian3Center1.x, _Cartesian3Center1.y, _Cartesian3Center1.z, 1);
+
+        var _time = (new Date()).getTime();
+
+        var _scratchCartesian4Center = new Cesium.Cartesian4();
+        var _scratchCartesian4Center1 = new Cesium.Cartesian4();
+        var _scratchCartesian3Normal = new Cesium.Cartesian3();
+
+
+        var ScanPostStage = new Cesium.PostProcessStage({
+          fragmentShader: getScanSegmentShader(),
+          uniforms: {
+            u_scanCenterEC: function () {
+              var temp = Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center, _scratchCartesian4Center);
+              return temp;
+            },
+            u_scanPlaneNormalEC: function () {
+              var temp = Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center, _scratchCartesian4Center);
+              var temp1 = Cesium.Matrix4.multiplyByVector(viewer.camera._viewMatrix, _Cartesian4Center1, _scratchCartesian4Center1);
+
+              _scratchCartesian3Normal.x = temp1.x - temp.x;
+              _scratchCartesian3Normal.y = temp1.y - temp.y;
+              _scratchCartesian3Normal.z = temp1.z - temp.z;
+
+              Cesium.Cartesian3.normalize(_scratchCartesian3Normal, _scratchCartesian3Normal);
+
+              return _scratchCartesian3Normal;
+            },
+            u_radius: function () {
+              return maxRadius * (((new Date()).getTime() - _time) % duration) / duration;
+            },
+            u_scanColor: scanColor
+          }
+        });
+
+        viewer.scene.postProcessStages.add(ScanPostStage);
+        return ScanPostStage;
+      }
+      //扩散效果Shader
+      function getScanSegmentShader() {
+        var scanSegmentShader = "\n\
+                        uniform sampler2D colorTexture;\n\
+                        uniform sampler2D depthTexture;\n\
+                        varying vec2 v_textureCoordinates;\n\
+                        uniform vec4 u_scanCenterEC;\n\
+                        uniform vec3 u_scanPlaneNormalEC;\n\
+                        uniform float u_radius;\n\
+                        uniform vec4 u_scanColor;\n\
+                        \n\
+                        vec4 toEye(in vec2 uv,in float depth)\n\
+                        {\n\
+                                    vec2 xy = vec2((uv.x * 2.0 - 1.0),(uv.y * 2.0 - 1.0));\n\
+                                    vec4 posIncamera = czm_inverseProjection * vec4(xy,depth,1.0);\n\
+                                    posIncamera = posIncamera/posIncamera.w;\n\
+                                    return posIncamera;\n\
+                        }\n\
+                        \n\
+                        vec3 pointProjectOnPlane(in vec3 planeNormal,in vec3 planeOrigin,in vec3 point)\n\
+                        {\n\
+                                    vec3 v01 = point - planeOrigin;\n\
+                                    float d = dot(planeNormal,v01);\n\
+                                    return (point-planeNormal * d);\n\
+                        }\n\
+                        float getDepth(in vec4 depth)\n\
+                        {\n\
+                                    float z_window = czm_unpackDepth(depth);\n\
+                                    z_window = czm_reverseLogDepth(z_window);\n\
+                                    float n_range = czm_depthRange.near;\n\
+                                    float f_range = czm_depthRange.far;\n\
+                                    return (2.0 * z_window - n_range - f_range)/(f_range-n_range);\n\
+                        } \n\
+                        void main()\n\
+                        {\n\
+                                    gl_FragColor = texture2D(colorTexture,v_textureCoordinates);\n\
+                                    float depth = getDepth(texture2D(depthTexture,v_textureCoordinates));\n\
+                                    vec4 viewPos = toEye(v_textureCoordinates,depth);\n\
+                                    vec3 prjOnPlane = pointProjectOnPlane(u_scanPlaneNormalEC.xyz,u_scanCenterEC.xyz,viewPos.xyz);\n\
+                                    float dis = length(prjOnPlane.xyz - u_scanCenterEC.xyz);\n\
+                                    if(dis<u_radius)\n\
+                                    {\n\
+                                        float f = 1.0-abs(u_radius - dis )/ u_radius;\n\
+                                        f = pow(f,4.0);\n\
+                                        gl_FragColor = mix(gl_FragColor,u_scanColor,f);\n\
+                                    }\n\
+                        } \n\ ";
+        return scanSegmentShader;
+      }
+      showCircleScan() // 圆扩散
+      function showCircleScan() {
+        var cartographicCenter = new Cesium.Cartographic(Cesium.Math.toRadians(107.18), Cesium.Math.toRadians(24.03), 0);
+        var scanColor = new Cesium.Color(0, 1, 0, 1);
+        lastStage = addCircleScanPostStage(viewer, cartographicCenter, 1000000, scanColor, 1000);
+      }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // 1 显示标牌
+  function loadBaseEntity (a) {
+    let color = 'transparent'
+    //加载一个图片
+    let image = new Image()
+    image.onload = function () {
+
+      let canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 256
+      let ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = color
+      ctx.fillRect(44, 64, 60, 80)
+
+      ctx.drawImage(image, 0, 0, 200, 200, 0, 128, 128, 128)
+
+      let img = canvas.toDataURL('image/png')
+
+      //画一个广告牌
+      // drawImageAddBlock(img,a)
+      pointPoint(img, a)
+    }
+    let {dw} = a
+    if (dw == 'd') {
+      image.src = '/distfxpg/static/img/mark/df.png'//敌方 蓝色
+    } else {
+      image.src = '/distfxpg/static/img/mark/wf.png'//我方红色
+    }
+
+  }
+
+  // 2 显示重要性
+  function loadImportEntity (a) {
+    let {ZYX, hasZYX} = a
+    let color = 'green'
+    if (ZYX >= 0.25) {
+      color = 'yellow'
+    }
+    if (ZYX >= 0.5) {
+      color = 'orange'
+    }
+    if (ZYX >= 0.75) {
+      color = 'red'
+    }
+    if (!hasZYX) {
+      color = 'transparent'
+    }
+
+    //加载一个图片
+    let image = new Image()
+    image.onload = function () {
+
+      let canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 256
+      let ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = color
+      ctx.fillRect(59, 40, 69, 50)
+
+      ctx.drawImage(image, 0, 0, 200, 200, 0, 128, 128, 128)
+
+      let img = canvas.toDataURL('image/png')
+
+      //画一个广告牌
+      // drawImageAddBlock(img,a)
+      pointPoint(img, a)
+    }
+    let {dw} = a
+    if (dw == 'd') {
+      image.src = '/distfxpg/static/img/mark/df.png'//敌方 蓝色
+    } else {
+      image.src = '/distfxpg/static/img/mark/wf.png'//我方红色
+    }
+  }
+
+  // 3 显示区域
+  function loadRangeEntity (a) {
+    let color = 'transparent'
+    //加载一个图片
+    let image = new Image()
+    image.onload = function () {
+
+      let canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 256
+      let ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = color
+      ctx.fillRect(44, 64, 60, 80)
+
+      ctx.drawImage(image, 0, 0, 200, 200, 0, 128, 128, 128)
+
+      let img = canvas.toDataURL('image/png')
+
+      //画一个广告牌
+      // drawImageAddBlock(img,a)
+      pointPoint(img, a, true)
+    }
+    let {dw} = a
+    if (dw == 'd') {
+      image.src = '/distfxpg/static/img/mark/df.png'//敌方 蓝色
+    } else {
+      image.src = '/distfxpg/static/img/mark/wf.png'//我方红色
+    }
+  }
+
+  function pointPoint (img, a, range) {
+    let {lon, lat, alt, name, ID, classAddId, FSBJ} = a
+    let bj = FSBJ - 0
+    if (range && bj > 0) {
+      let entity = viewer.entities.add({
+        position: new Cesium.Cartesian3.fromDegrees(lon, lat, alt),
+        billboard: {
+          image: img,
+          width: 40,
+          height: 80,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+
+        },
+        label: {
+          // id: 'my label',
+          text: name,
+          font: '20px',
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10)
+        },
+        //辐射范围
+        ellipse: {
+          semiMinorAxis: bj,
+          semiMajorAxis: bj,
+          rotation: Cesium.Math.toRadians(-40.0),
+          outline: true,
+          outlineColor: Cesium.Color.RED,
+          outlineWidth: 4000,
+          stRotation: Cesium.Math.toRadians(90),
+          // material :new Cesium.Color(0, 1, 0, 0.2)
+          material: new Cesium.ImageMaterialProperty({
+            // image:'/distfxpg/static/img/mark/circle.png',
+            repeat: new Cesium.Cartesian2(1.0, 1.0),
+            transparent: true,
+            color: new Cesium.CallbackProperty(function () {
+              let alp = 0.3
+              return Cesium.Color.AQUAMARINE.withAlpha(alp)
+            }, false)
+          })
+        },
+        name: `${classAddId}`,
+        // description: '系统自带的弹窗，可以接受html'
+      })
+    } else {
+      let entity = viewer.entities.add({
+        position: new Cesium.Cartesian3.fromDegrees(lon, lat, alt),
+        billboard: {
+          image: img,
+          width: 40,
+          height: 80,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        },
+        label: {
+          // id: 'my label',
+          text: name,
+          font: '20px',
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10)
+        },
+        //辐射范围
+        /* ellipse : {
+           semiMinorAxis : bj,
+           semiMajorAxis : bj,
+           rotation : Cesium.Math.toRadians(-40.0),
+           outline : true,
+           outlineColor : Cesium.Color.RED,
+           outlineWidth : 4000,
+           stRotation : Cesium.Math.toRadians(90),
+           // material :new Cesium.Color(0, 1, 0, 0.2)
+           material :new Cesium.ImageMaterialProperty({
+             image:'/distfxpg/static/img/mark/circle.png',
+             repeat:new Cesium.Cartesian2(1.0,1.0),
+             transparent:true,
+             color:new Cesium.CallbackProperty(function(){
+               let alp = 0.5;
+               return Cesium.Color.WHITE.withAlpha(alp)
+             },false)
+           })
+         },*/
+        name: `${classAddId}`,
+        // description: '系统自带的弹窗，可以接受html'
+      })
+    }
+
+  }
+
+  function lineLine (a, b) {
+    viewer.entities.add({
+      name: 'red line on the surface',
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArrayHeights([...a, ...b]),
+        width: 20,
+        followSurface: false,
+        material: new Cesium.PolylineArrowMaterialProperty(Cesium.Color.CRIMSON)
+      }
+    })
+  }
+
+  //设施总览
+  function pointPoint2 (img, a) {
+    let {lon, lat, alt, name, ID, classAddId, FSBJ} = a
+    let bj = FSBJ - 0
+    if (bj > 0) {
+      let entity = viewer.entities.add({
+        position: new Cesium.Cartesian3.fromDegrees(lon, lat, alt),
+        billboard: {
+          image: img,
+          width: 40,
+          height: 80,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+
+        },
+        label: {
+          // id: 'my label',
+          text: name,
+          font: '20px',
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10)
+        },
+        //辐射范围
+        ellipse: {
+          semiMinorAxis: bj,
+          semiMajorAxis: bj,
+          rotation: Cesium.Math.toRadians(-40.0),
+          outline: true,
+          outlineColor: Cesium.Color.RED,
+          outlineWidth: 4000,
+          stRotation: Cesium.Math.toRadians(90),
+          // material :new Cesium.Color(0, 1, 0, 0.2)
+          material: new Cesium.ImageMaterialProperty({
+            // image:'/distfxpg/static/img/mark/circle.png',
+            repeat: new Cesium.Cartesian2(1.0, 1.0),
+            transparent: true,
+            color: new Cesium.CallbackProperty(function () {
+              let alp = 0.3
+              return Cesium.Color.AQUAMARINE.withAlpha(alp)
+            }, false)
+          })
+        },
+        name: `${classAddId}`,
+        // description: '系统自带的弹窗，可以接受html'
+      })
+    } else {
+      let entity = viewer.entities.add({
+        position: new Cesium.Cartesian3.fromDegrees(lon, lat, alt),
+        billboard: {
+          image: img,
+          width: 40,
+          height: 80,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        },
+        label: {
+          // id: 'my label',
+          text: name,
+          font: '20px',
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          verticalOrigin: Cesium.VerticalOrigin.TOP,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          eyeOffset: new Cesium.Cartesian3(0, 0, -10)
+        },
+        //辐射范围
+        /* ellipse : {
+           semiMinorAxis : bj,
+           semiMajorAxis : bj,
+           rotation : Cesium.Math.toRadians(-40.0),
+           outline : true,
+           outlineColor : Cesium.Color.RED,
+           outlineWidth : 4000,
+           stRotation : Cesium.Math.toRadians(90),
+           // material :new Cesium.Color(0, 1, 0, 0.2)
+           material :new Cesium.ImageMaterialProperty({
+             image:'/distfxpg/static/img/mark/circle.png',
+             repeat:new Cesium.Cartesian2(1.0,1.0),
+             transparent:true,
+             color:new Cesium.CallbackProperty(function(){
+               let alp = 0.5;
+               return Cesium.Color.WHITE.withAlpha(alp)
+             },false)
+           })
+         },*/
+        name: `${classAddId}`,
+        // description: '系统自带的弹窗，可以接受html'
+      })
+    }
+
+  }
+
+  //重要信息
+  function pointPointBlock (a) {
+    let {position, label, img, id} = a
+    let entity = viewer.entities.add({
+      position: new Cesium.Cartesian3.fromDegrees(...position),
+      billboard: {
+        image: drawImage(),
+        width: 40,
+        height: 40,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      },
+      label: {
+        // id: 'my label',
+        text: label,
+        font: '50px',
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+        fillColor: Cesium.Color.RED
+      },
+      name: id,
+      // description: '系统自带的弹窗，可以接受html'
+    })
+  }
+
+  //辐射范围
+  function circleCircle (a) {
+    let {position, label, img, id} = a
+    let entity = viewer.entities.add({
+      position: new Cesium.Cartesian3.fromDegrees(...position),
+      billboard: {
+        image: drawImage(),
+        width: 40,
+        height: 40,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      },
+      label: {
+        // id: 'my label',
+        text: label,
+        font: '20px',
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+      },
+      ellipse: {
+        semiMinorAxis: 250000.0,
+        semiMajorAxis: 250000.0,
+        rotation: Cesium.Math.toRadians(-40.0),
+        outline: true,
+        outlineColor: Cesium.Color.RED,
+        outlineWidth: 4000,
+        stRotation: Cesium.Math.toRadians(90),
+        // material :new Cesium.Color(0, 1, 0, 0.2)
+        material: new Cesium.ImageMaterialProperty({
+          image: '/distfxpg/static/img/mark/circle.png',
+          repeat: new Cesium.Cartesian2(1.0, 1.0),
+          transparent: true,
+          color: new Cesium.CallbackProperty(function () {
+            let alp = 0.5
+            return Cesium.Color.WHITE.withAlpha(alp)
+          }, false)
+        })
+      },
+      name: id,
+      // description: '系统自带的弹窗，可以接受html'
+    })
+  }
+
+  //删除所有实体
+  function  () {
+    viewer.entities.removeAll()
+  }
+
+  function drawImage () {
+    return '/distfxpg/static/img/mark/机场.png'
+
+    let canvas = document.createElement('canvas')
+    let ctx = canvas.getContext('2d')
+    canvas.width = 10
+    canvas.height = 10
+    ctx.fillStyle = 'orange'
+    ctx.fillRect(0, 0, 10, 10)
+
+    let url = canvas.toDataURL('image/png')
+    return url
+  }
+
+  function drawImageAndBlock (a) {
+    let {ZYX} = a
+    let color = 'green'
+    if (ZYX >= 0.25) {
+      color = 'yellow'
+    }
+    if (ZYX >= 0.5) {
+      color = 'orange'
+    }
+    if (ZYX >= 0.75) {
+      color = 'red'
+    }
+
+    //加载一个图片
+    let image = new Image()
+    image.onload = function () {
+
+      let canvas = document.createElement('canvas')
+      canvas.width = 128
+      canvas.height = 256
+      let ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = color
+      ctx.fillRect(44, 64, 60, 80)
+
+      ctx.drawImage(image, 0, 0, 200, 200, 0, 128, 128, 128)
+
+      let img = canvas.toDataURL('image/png')
+
+      //画一个广告牌
+      // drawImageAddBlock(img,a)
+      pointPoint(img, a)
+    }
+    image.src = '/distfxpg/static/img/mark/2.png'
+  }
+
+  function drawImageAddBlock (img, a) {
+    let {position, label, id} = a
+    let entity = viewer.entities.add({
+      position: new Cesium.Cartesian3.fromDegrees(...position),
+      billboard: {
+        image: img,
+        width: 40,
+        height: 80,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      },
+      label: {
+        // id: 'my label',
+        text: label,
+        font: '20px',
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.TOP,
+      },
+      name: id,
+      // description: '系统自带的弹窗，可以接受html'
+    })
+  }
+
+  function panelPanel (arr) {
+    let positionList = Array.from(arr, item => {
+      return new Cesium.Cartesian3.fromDegrees(...item)
+    })
+    viewer.entities.add({
+      polygon: {
+        hierarchy: {
+          positions: positionList
+        },
+        material: Cesium.Color.BLUE.withAlpha(0.3)
+      }
+    })
+  }
+
+  if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true
+    onload(Cesium)
+  }
+
+</script>
+</body>
+</html>
+
+

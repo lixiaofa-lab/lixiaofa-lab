@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>圆形区域扫描</title>
+    <link rel="stylesheet" href="../scripts/Cesium/Widgets/widgets.css">
+    <script src="../scripts/Cesium/Cesium.js"></script>
+<!--    <script src=""></script>-->
+
+</head>
+<body>
+<div id="cesiumContainer"></div>
+</body>
+<script>
+
+    const app = new YsCesium("cesiumContainer")
+    const viewer = app.viewer
+    console.log(viewer)
+
+    let lon = 116;
+    let lat = 39;
+
+    a(lon,lat)
+    function a(lon,lat){
+        app.addCircleScan({
+                lon:lon,//经度
+                lat:lat, //纬度
+                scanColor:new Cesium.Color(0,1.0,0,1),
+                r:1500000,//扫描半径
+                interval:8000//时间间隔
+         });
+
+    }
+    //飞行到这个位子
+    // viewer.camera.flyTo({
+    //     destination : Cesium.Cartesian3.fromDegrees(117.217124,31.809777, 1500.0),
+    //     orientation: {
+    //         heading : Cesium.Math.toRadians(90.0), // east, default value is 0.0 (north) //东西南北朝向
+    //         pitch : Cesium.Math.toRadians(-90),    // default value (looking down)  //俯视仰视视觉
+    //         roll : 0.0                             // default value
+    //     },
+    //     duration:3//3秒到达战场
+    // });
+    viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(116.46, 39.92, 10000000.0),
+    });
+</script>
+</html>

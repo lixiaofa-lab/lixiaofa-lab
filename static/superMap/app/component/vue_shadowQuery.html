@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>vue阴影分析</title>
+
+    <!--  引入 图标样式-->
+    <link href="./css/geoFont/iconfont.css" rel="stylesheet">
+
+    <!--  引入 Cesium vue-->
+    <link href="../../Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="../../Build/Cesium/Cesium.js"></script>
+    <script src="../js/vue.min.js"></script>
+
+    <!--  引入supermap配置-->
+    <script src="../js/config.js"></script>
+    <script src="../js/tooltip.js"></script>
+
+    <!--  引入view-design控件库 -->
+    <link rel="stylesheet" href="../js/iview/styles/iview.css">
+    <script src="../js/iview/iview.min.js"></script>
+
+    <!--  引入第三方库 -->
+    <script src="../js/axios.min.js"></script>
+
+    <!--  引入组件库 -->
+    <script src="./js/vue-iclient3d-webgl.min.js"></script>
+
+
+</head>
+<body>
+<div id="app">
+    <sm-viewer :scene-url="URL">
+        <sm3d-shadowquery></sm3d-shadowquery>
+    </sm-viewer>
+</div>
+
+<script>
+    let vm = new Vue({
+            el: '#app',
+            data: {
+                URL: URL_CONFIG.SCENE_BIMBUILDING,
+            }
+        }
+    );
+</script>
+</body>
+</html>

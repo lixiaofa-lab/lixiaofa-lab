@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>抛物线</title>
+    <link rel="stylesheet" href="../scripts/Cesium/Widgets/widgets.css">
+    <script src="../scripts/Cesium/Cesium.js"></script>
+    <script src=""></script>
+</head>
+<body>
+<div id="map"></div>
+</body>
+<script>
+
+    const app = new YsCesium("map")
+    const viewer = app.viewer
+
+    const lat = 30.598026044;
+    const lon = 114.302312702;
+
+    //设置初始位置
+    viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(lon, lat, 300000)
+    });
+
+    //创建射线
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+    const data= {
+        flowing:true,
+        height:50000,//抛物线最大高度
+        flowImage:"../ysCesium/images/colors1.png",
+        center:{id:0,lon: 116, lat: 30,size:10,color:Cesium.Color.PURPLE},//中心点
+        points: [
+            { id:1,"lon": 115, "lat": 30,color:Cesium.Color.YELLOW,size:10},   //抛物线降落点
+            // { id:2,"lon": 110.795000473, "lat": 32.638540762,color:Cesium.Color.RED,size:15},
+            // { id:3,"lon": 111.267729446, "lat": 30.698151246,color:Cesium.Color.BLUE,size:15},
+            // { id:4,"lon": 112.126643144, "lat": 32.058588576,color:Cesium.Color.GREEN,size:15},
+            // { id:5,"lon": 114.885884938, "lat": 30.395401912,color:Cesium.Color.BLUE,size:15},
+            // { id:6,"lon": 112.190419415, "lat": 31.043949588,color:Cesium.Color.BLUE,size:15},
+            // { id:7,"lon": 113.903569642, "lat": 30.932054050,color:Cesium.Color.BLUE,size:15},
+            // { id:8,"lon": 112.226648859, "lat": 30.367904255,color:Cesium.Color.BLUE,size:15},
+            // { id:9,"lon": 114.861716770, "lat": 30.468634833,color:Cesium.Color.BLUE,size:15},
+            // { id:10,"lon": 114.317846048, "lat": 29.848946148,color:Cesium.Color.BLUE,size:15},
+            // { id:11,"lon": 113.371985426, "lat": 31.704988330,color:Cesium.Color.BLUE,size:15},
+            // { id:12,"lon": 109.468884533, "lat": 30.289012191,color:Cesium.Color.BLUE,size:15},
+            // { id:13,"lon": 113.414585069, "lat": 30.368350431,color:Cesium.Color.SALMON,size:15},
+            // { id:14,"lon": 112.892742589, "lat": 30.409306203,color:Cesium.Color.WHITE,size:15},
+            // { id:15,"lon": 113.160853710, "lat": 30.667483468,color:Cesium.Color.SALMON,size:15},
+            // { id:16,"lon": 110.670643354,"lat":31.748540780,color:Cesium.Color.PINK,size:15}
+        ],
+        options:{
+            name:'yscNoNeedEntity',
+            polyline: {
+                width:3,//线宽度
+                material:Cesium.Color.YELLOW,
+                interval: 1000,//混合颜色、(红绿混合透明后 就是黄色了)3000秒发射间隔,单纯材质无法展示飞行动态。所以去掉了。
+            }
+        }
+    };
+    //中心点 和散点 都是 entity point 做的 有需要的话 可以用其他的来做。
+    app.addFlyLinesAndPoints(data,function (id) {
+       ys.messageBox(id)
+    });
+</script>
+</html>

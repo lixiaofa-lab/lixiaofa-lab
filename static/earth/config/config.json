@@ -1,0 +1,99 @@
+{
+  "map3d": {
+    "homeButton": false,
+    "sceneModePicker": false,
+    "navigationHelpButton": false,
+    "infoBox": false,
+    "vrButton": false,
+    "fullscreenButton": false,
+    "animation": false,
+    "timeline": false,
+    "geocoder": false,
+    "showRenderLoopErrors": false,
+    "center": {
+      "y": 25.686288,
+      "x": 115.229619,
+      "z": 5004268.9,
+      "heading": 359.2,
+      "pitch": -90,
+      "roll": 360
+    },
+    "minzoom": 1,
+    "maxzoom": 50000000,
+    "style": {
+      "atmosphere": true,
+      "lighting": false,
+      "fog": false,
+      "testTerrain": false
+    },
+    "contextmenu": false,
+    "mouseZoom": false,
+    "location": {
+      "fps": true,
+      "format": "<div>经度:{x}</div> <div>纬度:{y}</div> <div>海拔：{z}米</div> <div>层级：{level}</div> <div>方向：{heading}度</div> <div>俯仰角：{pitch}度</div> <div>视高：{height}米</div>"
+    },
+    "navigation": {
+      "legend": {
+        "left": "0px",
+        "bottom": "-1px"
+      },
+      "compass": {
+        "bottom": "240px",
+        "right": "2px"
+      }
+    },
+    "terrain": {
+      "url": "http://192.168.4.210/mapdata/terrain",
+      "visible": false
+    },
+    "basemaps": [
+      {
+        "pid": 10,
+        "name": "离线地图",
+        "type": "group",
+        "icon": "img/basemaps/google_img.png",
+        "layers": [
+          {
+            "name": "全球",
+            "type": "xyz",
+            "url": "earth/{z}/{x}/{y}.jpg",
+            "minimumLevel": 0,
+            "maximumLevel": 9,
+            "crs": "EPSG:4326"
+          }
+        ],
+        "visible": true
+      },
+      {
+        "id": 10,
+        "name": "地图底图",
+        "type": "group"
+      },
+      {
+        "pid": 10,
+        "name": "谷歌卫星（无网线）",
+        "icon": "img/basemaps/google_img.png",
+        "type": "group",
+        "layers": [
+          {
+            "name": "底图-补南北极空洞",
+            "type": "xyz",
+            "url": "http://192.168.4.210/mapdata/video/maptile/wgs3857imgD/{z}/{x}/{y}.jpg",
+            "crs": "3857",
+            "minimumLevel": 0,
+            "maximumLevel": 18
+          }
+        ],
+        "visible": false
+      },
+      {
+        "pid": 10,
+        "name": "单张图片",
+        "icon": "img/basemaps/offline.png",
+        "type": "image",
+        "url": "img/tietu/world.jpg",
+        "visible": false
+      }
+    ]
+  }
+}
